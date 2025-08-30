@@ -4,10 +4,11 @@ from langchain_openai import OpenAIEmbeddings
 from dotenv import load_dotenv
 
 load_dotenv()
-embeddings  = OpenAIEmbeddings()
 
 
 def create_and_save_vector_db(file_content,index_path="faiss_index"):
+    embeddings  = OpenAIEmbeddings()
+
     textsplitter = RecursiveCharacterTextSplitter(
         chunk_size=500,
         chunk_overlap = 50,
@@ -15,6 +16,8 @@ def create_and_save_vector_db(file_content,index_path="faiss_index"):
     )
 
     chunks = textsplitter.split_documents(file_content)
+    for chunk in chunks:
+        print(chunk)
     vector_store = FAISS.from_documents(chunks,embeddings)
 
     vector_store.save_local(index_path)

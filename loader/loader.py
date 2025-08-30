@@ -7,7 +7,7 @@ def load_pdf(file_path):
     return PyPDFLoader(file_path).load()
 
 def load_json(file_path):
-    return JSONLoader(file_path).load()
+    return JSONLoader(file_path=file_path,jq_schema=".",text_content=False).load()
 
 def load_text(file_path):
     return TextLoader(file_path).load()

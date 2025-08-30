@@ -16,7 +16,7 @@ def embed_vector(query,index_path='faiss_index'):
     - Understand user queries in natural language.
     - Retrieve relevant context from the vector store using embeddings.
     - Provide clear, concise, and accurate answers based on retrieved information.
-    - If data is insufficient, indicate that confidently that does not exist in embeddings instead of predicting.
+    - If data is insufficient provided from document (pdf/json/text file), indicate that confidently that does not exist in embeddings instead of predicting.
     
     Always keep responses user-friendly and structured when needed.
 
@@ -28,7 +28,7 @@ def embed_vector(query,index_path='faiss_index'):
     )
     embeddings  = OpenAIEmbeddings()
 
-    llm = ChatOpenAI(model="gpt-4o-mini",temperature=0.5)
+    llm = ChatOpenAI(model="gpt-4o-mini",temperature=0.7)
     vector_store = FAISS.load_local(index_path,embeddings,allow_dangerous_deserialization=True)
     retriever = vector_store.as_retriever(search_kwargs={"k":5})
     
@@ -42,6 +42,7 @@ def embed_vector(query,index_path='faiss_index'):
         retriever = retriever,
         chain_type_kwargs={"prompt":prompt}
     )
-
+    if not query or not query.strip():
+        return "Empty query, cannot generate embeddings."
     response = qa_chain.run(query)
-    print(response)
+    return response
