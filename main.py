@@ -1,10 +1,15 @@
 from bot.loader import load_text, load_pdf, load_json
+# import chainlit as cl
+from embeddings.embed import embed_vector, create_and_save_vector_db
 
-from embeddings.embed import embed_vector
 
 content = load_pdf('data/input.pdf')
-query = 'what does data all say about?'
-embed_vector(content,query)
+
+create_and_save_vector_db(content)
+while True:
+    query = input()
+    embed_vector(query)
+    
 
 
 

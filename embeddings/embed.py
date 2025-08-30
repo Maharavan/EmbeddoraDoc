@@ -1,36 +1,31 @@
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAI, ChatOpenAI
-from langchain_community.document_loaders import TextLoader
-from langchain_openai import OpenAIEmbeddings
-from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_community.vectorstores import FAISS
+from langchain_openai import ChatOpenAI,OpenAIEmbeddings
+from langchain_core.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
-from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
 
-
 load_dotenv()
-def embed_vector(file_content,query):
-    
+embeddings  = OpenAIEmbeddings()
+
+
+def create_and_save_vector_db(file_content,index_path="faiss_index"):
     textsplitter = RecursiveCharacterTextSplitter(
-        chunk_size=250,
-        chunk_overlap = 0,
+        chunk_size=500,
+        chunk_overlap = 50,
         length_function = len
     )
 
-    chunks = textsplitter.split_text(file_content)
-    embeddings  = OpenAIEmbeddings()
-    vector_store = FAISS.from_texts(chunks,embeddings)
+    chunks = textsplitter.split_documents(file_content)
+    vector_store = FAISS.from_documents(chunks,embeddings)
 
-    #vector_store.save_local('faiss')
-    
-    #docs_and_scores = vector_store.similarity_search_with_relevance_scores(query)
-    retriever = vector_store.as_retriever()
-    llm = ChatOpenAI(model="gpt-4o-mini",temperature=0.5)
+    vector_store.save_local(index_path)
+
+def embed_vector(query,index_path='faiss_index'):
     system_prompt = (
     """
     You are Embeddoradoc, an intelligent assistant specialized in analyzing data stored in a vector database.  
-    Your role is to:
+    Your role is to
     - Understand user queries in natural language.
     - Retrieve relevant context from the vector store using embeddings.
     - Provide clear, concise, and accurate answers based on retrieved information.
@@ -44,11 +39,14 @@ def embed_vector(file_content,query):
 
     """
     )
-    
+
+    llm = ChatOpenAI(model="gpt-4o-mini",temperature=0.5)
+    vector_store = FAISS.load_local(index_path,embeddings,allow_dangerous_deserialization=True)
+    retriever = vector_store.as_retriever(search_kwargs={"k":5})
     
 
     prompt = PromptTemplate(
-        template=system_prompt,input_variables=["context","query"]
+        template=system_prompt,input_variables=["context","question"]
     )
 
     qa_chain = RetrievalQA.from_chain_type(
