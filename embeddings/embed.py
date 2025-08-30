@@ -1,4 +1,3 @@
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_openai import ChatOpenAI,OpenAIEmbeddings
 from langchain_core.prompts import PromptTemplate
@@ -6,20 +5,8 @@ from langchain.chains import RetrievalQA
 from dotenv import load_dotenv
 
 load_dotenv()
-embeddings  = OpenAIEmbeddings()
 
 
-def create_and_save_vector_db(file_content,index_path="faiss_index"):
-    textsplitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap = 50,
-        length_function = len
-    )
-
-    chunks = textsplitter.split_documents(file_content)
-    vector_store = FAISS.from_documents(chunks,embeddings)
-
-    vector_store.save_local(index_path)
 
 def embed_vector(query,index_path='faiss_index'):
     system_prompt = (
@@ -39,6 +26,7 @@ def embed_vector(query,index_path='faiss_index'):
 
     """
     )
+    embeddings  = OpenAIEmbeddings()
 
     llm = ChatOpenAI(model="gpt-4o-mini",temperature=0.5)
     vector_store = FAISS.load_local(index_path,embeddings,allow_dangerous_deserialization=True)
