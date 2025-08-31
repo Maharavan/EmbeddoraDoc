@@ -2,7 +2,8 @@ import tempfile
 import streamlit as st
 
 def get_uploaded_path(document):
-    
+    if document is None:
+        return None
     get_file_type = document.type
     if 'pdf' in get_file_type:
         get_extension = '.pdf'
