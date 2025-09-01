@@ -1,11 +1,23 @@
 import streamlit as st
+from components.chatbot import display_chat_messages
 from PIL import Image
 def conversation_history_uploaded_files(docname,filepath):
-
+    image = Image.open('assets/logo.png')
     with st.sidebar:
-        st.title('Uploaded Files 📁')
-        uploaded_files(docname,filepath)
+        st.sidebar.image(image,width=50)
+        if st.button('New chat 🤖 🌐'):
+            st.session_state.current_session = f"New chat {len(st.session_state.chat_sessions)}"
+            st.session_state.chat_sessions[st.session_state.current_session] = []
 
+        st.header('Uploaded Files 📁')
+        uploaded_files(docname,filepath)
+        st.header('Chat sessions 💬')
+        display_chat_sessions()
+
+def display_chat_sessions():
+    for chat,ses in st.session_state.chat_sessions.items():
+        if st.button(str(chat)):
+            st.session_state.current_session = chat
 
 
 def uploaded_files(name,url):

@@ -4,6 +4,7 @@ import sys
 from components.file_uploader import file_uploader
 from components.chat_history_upload_files import conversation_history_uploaded_files
 from utility.temp_file_helper import get_uploaded_path
+from utility.utils import css
 from components.chatbot import assistant_reply, user_query, display_chat_messages
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from loader.loader import load_file
@@ -18,12 +19,17 @@ st.set_page_config(
     page_icon=logo,
     page_title='EmbeddoraDoc'
 )
+css()
 
 if "uploaded_file_url" not in st.session_state:
     st.session_state.uploaded_file_url = defaultdict(list)
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+if "chat_sessions" not in st.session_state:
+    st.session_state.chat_sessions = {}
+
+if "current_session" not in st.session_state:
+    st.session_state.current_session = "New Chat"
+
 
 if "faiss_upload" not in st.session_state:
     st.session_state.faiss_upload = True
@@ -36,7 +42,6 @@ with col2:
     st.title("EmbeddoraDoc 🧠🤖")
 
 
-
 content_file = file_uploader()
 tmp_path = get_uploaded_path(content_file)
 if content_file:
@@ -46,11 +51,10 @@ else:
 
 if content_file is None:
     st.session_state.faiss_upload = True
-    st.session_state.messages.clear()
+    st.session_state.chat_sessions[st.session_state.current_session] = []
+
 
 display_chat_messages()
-
-
 
 if content_file is not None and st.session_state.faiss_upload:
     with st.spinner('Uploading into FAISS ..'):
@@ -66,3 +70,5 @@ if content_file is not None:
         with st.spinner('Loading ..'):
             ai_response = 'embed_vector(query)'
             assistant_reply(ai_response)
+if query and content_file is None:
+    st.info('Please upload file while querying')
