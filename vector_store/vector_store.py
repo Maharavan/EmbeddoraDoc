@@ -16,8 +16,6 @@ def create_and_save_vector_db(file_content,index_path="faiss_index"):
     )
 
     chunks = textsplitter.split_documents(file_content)
-    for chunk in chunks:
-        print(chunk)
     vector_store = FAISS.from_documents(chunks,embeddings)
-
+    
     vector_store.save_local(index_path)

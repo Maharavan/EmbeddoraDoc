@@ -29,6 +29,11 @@ if "chat_sessions" not in st.session_state:
 
 if "current_session" not in st.session_state:
     st.session_state.current_session = "New Chat"
+    st.session_state.chat_sessions[st.session_state.current_session] = {
+        "messages": [],
+        "files": ""
+    }
+
 
 
 if "faiss_upload" not in st.session_state:
@@ -41,8 +46,9 @@ with col1:
 with col2:
     st.title("EmbeddoraDoc 🧠🤖")
 
-
 content_file = file_uploader()
+
+
 tmp_path = get_uploaded_path(content_file)
 if content_file:
     conversation_history_uploaded_files(content_file.name,tmp_path)
@@ -51,7 +57,10 @@ else:
 
 if content_file is None:
     st.session_state.faiss_upload = True
-    st.session_state.chat_sessions[st.session_state.current_session] = []
+    st.session_state.chat_sessions[st.session_state.current_session] = {
+        "messages": [],
+        "files": ""
+    }
 
 
 display_chat_messages()
@@ -59,7 +68,7 @@ display_chat_messages()
 if content_file is not None and st.session_state.faiss_upload:
     with st.spinner('Uploading into FAISS ..'):
         content = load_file(tmp_path)
-        create_and_save_vector_db(content)
+        # create_and_save_vector_db(content)
         st.session_state.faiss_upload = False
 
 

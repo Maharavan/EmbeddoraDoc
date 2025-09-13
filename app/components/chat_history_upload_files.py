@@ -1,13 +1,21 @@
 import streamlit as st
-from components.chatbot import display_chat_messages
+import sys
+import os
 from PIL import Image
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utility import base64converter
+
 def conversation_history_uploaded_files(docname,filepath):
-    image = Image.open('assets/logo.png')
+    base64_logo = base64converter.get_base64_string("assets/logo.png")
     with st.sidebar:
-        st.sidebar.image(image,width=50)
+        st.markdown(
+            f'<img src="data:image/png;base64,{base64_logo}" id="side-logo">',
+            unsafe_allow_html=True
+        )
         if st.button('New chat 🤖 🌐'):
             st.session_state.current_session = f"New chat {len(st.session_state.chat_sessions)}"
-            st.session_state.chat_sessions[st.session_state.current_session] = []
+            st.session_state.chat_sessions[st.session_state.current_session] = {}
+            st.session_state.chat_sessions[st.session_state.current_session] = {"messages":[],"files": ""}
 
         st.header('Uploaded Files 📁')
         uploaded_files(docname,filepath)
@@ -18,6 +26,7 @@ def display_chat_sessions():
     for chat,ses in st.session_state.chat_sessions.items():
         if st.button(str(chat)):
             st.session_state.current_session = chat
+    print(st.session_state.chat_sessions[st.session_state.current_session])
 
 
 def uploaded_files(name,url):
@@ -25,6 +34,7 @@ def uploaded_files(name,url):
         
         if name is not None:
             st.session_state.uploaded_file_url[name].append(url)
+
             icon_map = {
                 'pdf':  Image.open('assets/pdf.png'),
                 'json': Image.open('assets/json.png'),

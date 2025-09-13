@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-
 def embed_vector(query,index_path='faiss_index'):
     system_prompt = (
     """
@@ -28,11 +27,10 @@ def embed_vector(query,index_path='faiss_index'):
     )
     embeddings  = OpenAIEmbeddings()
 
-    llm = ChatOpenAI(model="gpt-4o-mini",temperature=0.7)
+    llm = ChatOpenAI(model="gpt-4o-mini",temperature=0)
     vector_store = FAISS.load_local(index_path,embeddings,allow_dangerous_deserialization=True)
     retriever = vector_store.as_retriever(search_kwargs={"k":5})
     
-
     prompt = PromptTemplate(
         template=system_prompt,input_variables=["context","question"]
     )
@@ -42,7 +40,6 @@ def embed_vector(query,index_path='faiss_index'):
         retriever = retriever,
         chain_type_kwargs={"prompt":prompt}
     )
-    if not query or not query.strip():
-        return "Empty query, cannot generate embeddings."
     response = qa_chain.run(query)
+
     return response
