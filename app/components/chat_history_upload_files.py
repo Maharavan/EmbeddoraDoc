@@ -14,6 +14,7 @@ def conversation_history_uploaded_files(docname,filepath):
         )
         if st.button('New chat 🤖 🌐'):
             st.session_state.current_session = f"New chat {len(st.session_state.chat_sessions)}"
+            st.query_params["session"] = st.session_state.current_session
             st.session_state.chat_sessions[st.session_state.current_session] = {}
             st.session_state.chat_sessions[st.session_state.current_session] = {"messages":[],"files": ""}
 
@@ -23,10 +24,10 @@ def conversation_history_uploaded_files(docname,filepath):
         display_chat_sessions()
 
 def display_chat_sessions():
-    for chat,ses in st.session_state.chat_sessions.items():
+    for chat,ses in reversed(st.session_state.chat_sessions.items()):
         if st.button(str(chat)):
             st.session_state.current_session = chat
-    print(st.session_state.chat_sessions[st.session_state.current_session])
+    print(st.session_state.chat_sessions)
 
 
 def uploaded_files(name,url):

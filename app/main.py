@@ -27,13 +27,14 @@ if "uploaded_file_url" not in st.session_state:
 if "chat_sessions" not in st.session_state:
     st.session_state.chat_sessions = {}
 
+if "metadata_file" not in st.session_state:
+    st.session_state.metadata_file = defaultdict(str)
 if "current_session" not in st.session_state:
     st.session_state.current_session = "New Chat"
     st.session_state.chat_sessions[st.session_state.current_session] = {
         "messages": [],
         "files": ""
     }
-
 
 
 if "faiss_upload" not in st.session_state:
@@ -57,10 +58,12 @@ else:
 
 if content_file is None:
     st.session_state.faiss_upload = True
-    st.session_state.chat_sessions[st.session_state.current_session] = {
-        "messages": [],
-        "files": ""
-    }
+    
+current_file = st.session_state.chat_sessions[st.session_state.current_session].get("files", "")
+if current_file:
+    st.info(f"📂 Currently uploaded file for this session: **{current_file}**")
+else:
+    st.warning("⚠️ No file uploaded yet for this session.")
 
 
 display_chat_messages()

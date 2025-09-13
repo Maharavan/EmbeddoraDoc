@@ -3,9 +3,6 @@ import streamlit as st
 
 def display_chat_messages():
     if st.session_state.chat_sessions:
-        print(type(st.session_state.chat_sessions[st.session_state.current_session]))
-        print((st.session_state.chat_sessions[st.session_state.current_session]))
-
         for msg in st.session_state.chat_sessions[st.session_state.current_session]["messages"]:
             avatar = '🤖' if msg['role'] == 'assistant' else '🧑🏻‍💻'
             with st.chat_message(msg['role'], avatar=avatar):
