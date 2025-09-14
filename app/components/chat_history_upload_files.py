@@ -25,19 +25,52 @@ def conversation_history_uploaded_files(docname,filepath):
 
 def display_chat_sessions():
     for chat, ses in reversed(st.session_state.chat_sessions.items()):
-        with st.expander(chat):
-            st.write(f"📱 Messages: {len(ses['messages'])}")
-            st.write(f"🗃️ File count: {len(ses['files'])}")
-            
-            col1, col2 = st.columns(2)
+        current = False
+        if chat==st.session_state.current_session:
+            current = True
+        with st.expander(chat,expanded=current):
+            col1,col2 = st.columns(2)
             with col1:
-                if st.button("🚀 Switch", key=f"switch_{chat}"):
-                    st.session_state.current_session = chat
-                    st.rerun()
+                st.metric("📱 Messages",len(ses['messages']))
             with col2:
-                if st.button("💥 Delete", key=f"delete_{chat}"):
-                    delete_chat_session(chat)
-    
+                st.metric("🗃️ File count", len(ses['files']))
+            
+            if st.session_state.get(f"renaming_{chat}", False):
+                new_name = st.text_input("New session name:", key=f"rename_input_{chat}")
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("✅ Confirm", key=f"confirm_rename_{chat}"):
+                        if new_name.strip():
+                            rename_chat_session(chat, new_name.strip())
+                            st.session_state[f"renaming_{chat}"] = False
+                with col2:
+                    if st.button("❌ Cancel", key=f"cancel_rename_{chat}"):
+                        st.session_state[f"renaming_{chat}"] = False
+                        st.rerun()
+            else:
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    if st.button("🚀Switch", key=f"switch_{chat}"):
+                        st.session_state.current_session = chat
+                        st.rerun()
+                with col2:
+                    if st.button("💥Delete", key=f"delete_{chat}"):
+                        delete_chat_session(chat)
+                with col3:
+                    if st.button("🏷️Rename", key=f"rename_{chat}"):
+                        st.session_state[f"renaming_{chat}"] = True
+                        st.rerun()
+
+def rename_chat_session(old_name, new_name):
+    if old_name in st.session_state.chat_sessions and new_name:
+        session_data = st.session_state.chat_sessions[old_name]
+        st.session_state.chat_sessions[new_name] = session_data
+        del st.session_state.chat_sessions[old_name]
+        
+        if st.session_state.current_session == old_name:
+            st.session_state.current_session = new_name
+            
+        st.rerun()
 def delete_chat_session(chat):
     if chat in st.session_state.chat_sessions:
         del st.session_state.chat_sessions[chat]
