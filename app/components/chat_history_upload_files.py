@@ -24,13 +24,31 @@ def conversation_history_uploaded_files(docname,filepath):
         display_chat_sessions()
 
 def display_chat_sessions():
-    for chat,ses in reversed(st.session_state.chat_sessions.items()):
-
-        overall_session = f"{chat}   📱 Messages: {str(len(ses['messages']))} 🗃️ File count: {str(len(ses['files']))}"
-        if st.button(str(overall_session)):
-            st.session_state.current_session = chat
-            st.rerun()
+    for chat, ses in reversed(st.session_state.chat_sessions.items()):
+        with st.expander(chat):
+            st.write(f"📱 Messages: {len(ses['messages'])}")
+            st.write(f"🗃️ File count: {len(ses['files'])}")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("🚀 Switch", key=f"switch_{chat}"):
+                    st.session_state.current_session = chat
+                    st.rerun()
+            with col2:
+                if st.button("💥 Delete", key=f"delete_{chat}"):
+                    delete_chat_session(chat)
     
+def delete_chat_session(chat):
+    if chat in st.session_state.chat_sessions:
+        del st.session_state.chat_sessions[chat]
+    if st.session_state.current_session == chat:
+
+        if st.session_state.chat_sessions:
+            st.session_state.current_session = list(st.session_state.chat_sessions.keys())[0]
+        else:
+            st.session_state.current_session = "New chat"
+            st.session_state.chat_sessions[st.session_state.current_session] = {"messages":[],"files": set(),"faiss_upload":False,"current_file":""}
+    st.rerun()
 
 def uploaded_files(name,url):
     if name is not None or st.session_state.uploaded_file_url:

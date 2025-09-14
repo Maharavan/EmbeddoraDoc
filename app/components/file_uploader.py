@@ -6,7 +6,8 @@ def file_uploader():
         type=["pdf", "json", "txt"],
         key=st.session_state.current_session  # per-session uploader
     )
-
+    if not st.session_state.chat_sessions:
+        return None
     if uploaded_file is not None:
         st.session_state.chat_sessions[st.session_state.current_session]["current_file"] = uploaded_file.name
         st.session_state.chat_sessions[st.session_state.current_session]["files"].add(uploaded_file.name)

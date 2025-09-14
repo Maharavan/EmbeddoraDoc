@@ -57,7 +57,7 @@ else:
     conversation_history_uploaded_files(None,tmp_path)
 
     
-current_file = st.session_state.chat_sessions[st.session_state.current_session].get("current_file", "")
+current_file = st.session_state.chat_sessions[st.session_state.current_session].get("current_file", "") if st.session_state.chat_sessions else ""
 if current_file:
     st.info(f"📂 Currently uploaded file for this session: **{current_file}**")
 else:
