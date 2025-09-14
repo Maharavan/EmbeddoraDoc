@@ -1,7 +1,7 @@
 import streamlit as st
 
 
-def css():
+def load_css():
     st.markdown("""
                 <style>
                 .stButton > button,.stButton > button *{

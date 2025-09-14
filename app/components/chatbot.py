@@ -15,7 +15,6 @@ def user_query(query):
         )
         with st.chat_message("user", avatar="🧑🏻‍💻"):
             st.write(query)
-
 def assistant_reply(ai_response):
     st.session_state.chat_sessions[st.session_state.current_session]["messages"].append(
         {"role": "assistant", "content": ai_response}
