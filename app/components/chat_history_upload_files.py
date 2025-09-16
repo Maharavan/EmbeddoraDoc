@@ -4,6 +4,7 @@ import os
 from PIL import Image
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utility import base64converter
+from components.session_exporter import chat_session_exporter
 
 def conversation_history_uploaded_files(docname,filepath):
     base64_logo = base64converter.get_base64_string("assets/logo.png")
@@ -18,6 +19,8 @@ def conversation_history_uploaded_files(docname,filepath):
             st.session_state.chat_sessions[st.session_state.current_session] = {}
             st.session_state.chat_sessions[st.session_state.current_session] = {"messages":[],"files": set(),"faiss_upload":False,"current_file":""}
             st.rerun()
+        chat_session_exporter()
+
         st.header('Uploaded Files 📁')
         uploaded_files(docname,filepath)
         st.header('Chat sessions 💬')

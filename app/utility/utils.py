@@ -4,8 +4,8 @@ import streamlit as st
 def load_css():
     st.markdown("""
                 <style>
-                .stButton > button,.stButton > button *{
-                    font-size: 20px; ! important;
+                .stDownloadButton > button, .stButton > button,.stButton > button *{
+                    font-size: 25px; ! important;
                     background-color: transparent !important;
                     border: none !important;
                     box-shadow: none !important;
