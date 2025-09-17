@@ -20,8 +20,8 @@ def conversation_history_uploaded_files(docname,filepath):
             st.session_state.chat_sessions[st.session_state.current_session] = {"messages":[],"files": set(),"faiss_upload":False,"current_file":""}
             st.rerun()
         chat_session_exporter()
-
-        st.header('Uploaded Files 📁')
+        
+        st.header('Uploaded Files in current session 📁')
         uploaded_files(docname,filepath)
         st.header('Chat sessions 💬')
         display_chat_sessions()
@@ -90,7 +90,10 @@ def uploaded_files(name,url):
     if name is not None or st.session_state.uploaded_file_url:
         
         if name is not None:
-            st.session_state.uploaded_file_url[name].append(url)
+            if name not in st.session_state.uploaded_file_url:
+                st.session_state.uploaded_file_url[name]={}
+            st.session_state.uploaded_file_url[name]["path"] = url 
+            st.session_state.uploaded_file_url[name]['session']=st.session_state.current_session
 
             icon_map = {
                 'pdf':  Image.open('assets/pdf.png'),
@@ -100,19 +103,20 @@ def uploaded_files(name,url):
             }
 
             icon = next((icon_map[key] for key in icon_map if key in url), icon_map['document'])
-            st.session_state.uploaded_file_url[name].append(icon)
+            st.session_state.uploaded_file_url[name]['icon']=icon
         column1, column2 = 1,5
         for doc, link in st.session_state.uploaded_file_url.items():
-            col1,col2 = st.columns([column1,column2])
-            with col1:
-                st.image(link[1])
-            with col2:
-                with open(link[0],'rb') as file:
-                    st.download_button(
-                        label=doc,
-                        data=file,
-                        file_name=doc,
-                        type='tertiary'
-                    )
+            if st.session_state.current_session==link['session']:
+                col1,col2 = st.columns([column1,column2])
+                with col1:
+                    st.image(link['icon'])
+                with col2:
+                    with open(link['path'],'rb') as file:
+                        st.download_button(
+                            label=doc,
+                            data=file,
+                            file_name=doc,
+                            type='tertiary'
+                        )
     else:
         st.write('Doc yet to upload')

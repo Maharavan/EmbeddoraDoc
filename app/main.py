@@ -21,9 +21,6 @@ st.set_page_config(
 )
 load_css()
 
-if "uploaded_file_url" not in st.session_state:
-    st.session_state.uploaded_file_url = defaultdict(list)
-
 if "chat_sessions" not in st.session_state:
     st.session_state.chat_sessions = {}
 
@@ -37,6 +34,9 @@ if "current_session" not in st.session_state:
         "current_file":"",
         "faiss_upload":True
     }
+if "uploaded_file_url" not in st.session_state:
+    st.session_state.uploaded_file_url = defaultdict(dict)
+
 
 
 
@@ -53,10 +53,12 @@ content_file = file_uploader()
 tmp_path = get_uploaded_path(content_file)
 if content_file:
     conversation_history_uploaded_files(content_file.name,tmp_path)
+    
 else:
     conversation_history_uploaded_files(None,tmp_path)
 
-    
+
+
 current_file = st.session_state.chat_sessions[st.session_state.current_session].get("current_file", "") if st.session_state.chat_sessions else ""
 if current_file:
     st.info(f"📂 Currently uploaded file for this session: **{current_file}**")
