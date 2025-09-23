@@ -3,7 +3,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.document_loaders import TextLoader
 from langchain_core.documents import Document
 from pathlib import Path
-
+import streamlit as st
 def load_pdf(file_path):
     return PyPDFLoader(file_path).load()
 
@@ -36,5 +36,9 @@ def file_format_wrapper(func):
 
 @file_format_wrapper
 def load_file(document):
-    print('Processing files:',document)
+    for doc in document:
+        print(type(doc))
+        if doc.metadata is None:
+            doc.metadata = {}
+        doc.metadata["session_id"] = st.session_state.current_session
     return document

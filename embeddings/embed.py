@@ -3,7 +3,7 @@ from langchain_openai import ChatOpenAI,OpenAIEmbeddings
 from langchain_core.prompts import PromptTemplate
 from langchain.chains import RetrievalQA
 from dotenv import load_dotenv
-
+import streamlit as st
 load_dotenv()
 
 
@@ -29,7 +29,7 @@ def embed_vector(query,index_path='faiss_index'):
 
     llm = ChatOpenAI(model="gpt-4o-mini",temperature=0)
     vector_store = FAISS.load_local(index_path,embeddings,allow_dangerous_deserialization=True)
-    retriever = vector_store.as_retriever(search_kwargs={"k":5})
+    retriever = vector_store.as_retriever(search_kwargs={"k":5},filter={"session_id":st.session_state.current_session})
     
     prompt = PromptTemplate(
         template=system_prompt,input_variables=["context","question"]

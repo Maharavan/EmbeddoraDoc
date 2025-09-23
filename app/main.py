@@ -12,9 +12,10 @@ from vector_store.vector_store import create_and_save_vector_db
 from embeddings.embed import embed_vector
 import streamlit as st
 from PIL import Image
+from dotenv import load_dotenv
 logo = Image.open("assets/logo.png")
 
-
+load_dotenv()
 st.set_page_config(
     page_icon=logo,
     page_title='EmbeddoraDoc'
@@ -32,7 +33,7 @@ if "current_session" not in st.session_state:
         "messages": [],
         "files": set(),
         "current_file":"",
-        "faiss_upload":True
+        "faiss_upload":False
     }
 if "uploaded_file_url" not in st.session_state:
     st.session_state.uploaded_file_url = defaultdict(dict)
@@ -62,17 +63,20 @@ else:
 current_file = st.session_state.chat_sessions[st.session_state.current_session].get("current_file", "") if st.session_state.chat_sessions else ""
 if current_file:
     st.info(f"📂 Currently uploaded file for this session: **{current_file}**")
+    st.session_state.chat_sessions[st.session_state.current_session]["faiss_upload"] = False
 else:
     st.warning("⚠️ No file uploaded yet for this session.")
 
 
 display_chat_messages()
 
-if content_file is not None and st.session_state.chat_sessions[st.session_state.current_session]["faiss_upload"]:
+print(st.session_state.chat_sessions[st.session_state.current_session]["faiss_upload"])
+
+if content_file is not None and not st.session_state.chat_sessions[st.session_state.current_session]["faiss_upload"]:
     with st.spinner('Uploading into FAISS ..'):
         content = load_file(tmp_path)
-        # create_and_save_vector_db(content)
-        st.session_state.chat_sessions[st.session_state.current_session]["faiss_upload"] = False
+        create_and_save_vector_db(content)
+        st.session_state.chat_sessions[st.session_state.current_session]["faiss_upload"] = True
 
 
 query = st.chat_input('Hello from EmbeddoraDoc!')
@@ -80,7 +84,7 @@ if content_file is not None:
     if query:
         user_query(query)
         with st.spinner('Loading ..'):
-            ai_response = 'embed_vector(query)'
+            ai_response = embed_vector(query)
             assistant_reply(ai_response)
         st.rerun()
 if query and content_file is None:
