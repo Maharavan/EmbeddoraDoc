@@ -69,7 +69,7 @@ def embed_vector(query,index_path='faiss_index'):
 
     if not combined_docs:
         return "No results from FAISS or BM25 — reprocess documents."
-    
+    combined_docs = list({doc.page_content: doc for doc in combined_docs}.values())
     reranked_docs = rerank_encoder(query, combined_docs, top_k=3)
     context = "\n\n---\n\n".join([doc.page_content for doc in reranked_docs])
 
@@ -84,8 +84,6 @@ def embed_vector(query,index_path='faiss_index'):
     - If related information exists, answer using it in your own words.
     - If information truly does NOT exist, reply exactly: "Not found in embeddings."
 
-    First think step-by-step inside your reasoning (not visible to user).
-    Then produce the final answer clearly.
 
     -----------------
     Context:
@@ -106,5 +104,5 @@ def embed_vector(query,index_path='faiss_index'):
 
     result = check_hallcuinated_content(context, query, answer, llm)
     if not result:
-        return "Possible hallucination — answer not fully found in docs."
+        return f"Possible hallucination — answer not fully found in docs.\n\nAnswer: {answer}"
     return answer
