@@ -4,14 +4,53 @@ from langchain_community.vectorstores import FAISS
 from langchain_openai import ChatOpenAI,OpenAIEmbeddings
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from sentence_transformers import CrossEncoder
+
+model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+
+def rerank_encoder(query, documents, top_k=3):
+    """Rerank documents using CrossEncoder model."""
+    scores = model.predict([(query,doc.page_content) for doc in documents])
+    rank_docs = sorted(zip(documents,scores), key=lambda x :x[1],reverse=True)
+    top_docs = [doc for doc,score in rank_docs[:top_k]]
+    return top_docs
+
+
+def check_hallcuinated_content(context, question, answer ,llm): 
+    """Check if the answer is supported by the context using LLM."""
+    prompt = ("""
+    You are HallucinationChecker, an expert in verifying the accuracy of answers based on provided context.
+    Your task is to determine whether the given answer is supported by the context.
+
+    Context:
+    {context}
+
+    Question:
+    {question}
+
+    Answer:
+    {answer}
+
+    Respond with STRICTLY one word: "supported" or "unsupported".
+    """)
+    prompt_template = PromptTemplate.from_template(prompt)
+
+    chain = prompt_template| llm | StrOutputParser()
+
+    result = chain.invoke({"context":context,"question":question,"answer":answer})
+
+    if result.strip().lower() == "supported":
+        return True
+
+    return False
 
 def embed_vector(query,index_path='faiss_index'):
-
+    """Perform hybrid search using FAISS and BM25, then rerank and generate answer."""
     embeddings = OpenAIEmbeddings()
     llm = ChatOpenAI(model="gpt-4o-mini",temperature=0)
 
     vector_store = FAISS.load_local(index_path,embeddings,allow_dangerous_deserialization=True)
-    docs_vector = vector_store.similarity_search(query, k=5)
+    docs_vector = vector_store.similarity_search(query, k=10)
 
     print(f"FAISS hits: {len(docs_vector)}")
 
@@ -20,17 +59,19 @@ def embed_vector(query,index_path='faiss_index'):
             data = pickle.load(f)
         chunks = data["chunks"]
         bm25:BM25Okapi = data["bm25"]
-        docs_bm25_raw = bm25.get_top_n(query.split(), chunks, n=5)
+        docs_bm25_raw = bm25.get_top_n(query.split(), chunks, n=10)
         print(f"BM25 hits: {len(docs_bm25_raw)}")
     except FileNotFoundError:
         print("BM25 store not found — run embedding first.")
         docs_bm25_raw = []
 
-    combined_docs = list({d.page_content for d in docs_vector} | {c.page_content for c in docs_bm25_raw})
-    context = "\n---\n".join(combined_docs)
+    combined_docs = docs_vector + docs_bm25_raw
 
     if not combined_docs:
         return "No results from FAISS or BM25 — reprocess documents."
+    
+    reranked_docs = rerank_encoder(query, combined_docs, top_k=3)
+    context = "\n\n---\n\n".join([doc.page_content for doc in reranked_docs])
 
     system_prompt = ("""
     You are Embeddoradoc, a document-based reasoning assistant.
@@ -61,4 +102,9 @@ def embed_vector(query,index_path='faiss_index'):
     prompt = PromptTemplate.from_template(system_prompt)
     chain = prompt | llm | StrOutputParser()
 
-    return chain.invoke({"context":context,"question":query})
+    answer = chain.invoke({"context":context,"question":query})
+
+    result = check_hallcuinated_content(context, query, answer, llm)
+    if not result:
+        return "Possible hallucination — answer not fully found in docs."
+    return answer
