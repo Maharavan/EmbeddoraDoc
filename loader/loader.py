@@ -24,6 +24,7 @@ def load_text(file_path):
 
 def file_format_wrapper(func):
     def wrap(file_path):
+        document = None
         get_ext = Path(file_path).suffix.lower()
         if get_ext == '.pdf':
             document = load_pdf(file_path)

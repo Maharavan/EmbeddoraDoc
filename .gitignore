@@ -4,3 +4,4 @@ __pycache__
 .chainlit
 chainlit.md
 faiss_index
+*.pkl
