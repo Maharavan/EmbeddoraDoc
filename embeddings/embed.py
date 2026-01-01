@@ -82,9 +82,6 @@ def embed_vector(query,index_path='faiss_index'):
     - Know the content format is text/pdf/json documents.
     - Extract information relevant to the user's question.
     - If related information exists, answer using it in your own words.
-    - If information truly does NOT exist, reply exactly: "Not found in embeddings."
-
-
     -----------------
     Context:
     {context}

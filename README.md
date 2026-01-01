@@ -1,57 +1,99 @@
-1. Add Hybrid Search (This Week)
+# 📚 EmbeddoraDoc
 
-Create BM25 index alongside Chroma - when you add documents to Chroma, also feed them to BM25
-Modify your query function - search both stores and merge results
-Simple weighted combination - start with 70% semantic + 30% keyword
+EmbeddoraDoc is a **Streamlit-powered, Retrieval-Augmented Generation (RAG) assistant** for your personal documents.  
+Upload PDFs/JSON/TXT files, ask questions conversationally, and get precise answers grounded in your own data.
 
-2. Enhance Chunk Metadata (This Week)
+It uses a **Hybrid Retrieval Pipeline**:
+FAISS (embeddings) + BM25 (keyword search) → Cross-Encoder reranking → Hallucination-checked final answer.
 
-Add source tracking - which file each chunk came from
-Add chunk positioning - chunk index within document
-Add processing metadata - timestamp, chunk size, document type
-Session linking - ensure chunks know which session they belong to
+---
 
-3. Error Handling & Validation (Next Week)
+## ✨ Features
 
-API connection testing - verify Chroma Cloud connection before processing
-Empty document handling - what if chunking returns no chunks?
-Duplicate prevention - avoid re-adding same documents
-Progress feedback - show processing status to users
+- 🗂 Per-session uploads — each chat stores its own docs & index
+- 🔍 Hybrid search:
+  - FAISS (OpenAI embeddings)
+  - BM25 for keyword-based matching
+- 🧠 Cross-encoder reranking (`ms-marco-MiniLM-L-6-v2`)
+- 🛡 Hallucination guard — validates answers against context
+- 🖥 Streamlit chat UI with history
+- 📎 Sidebar tools:
+  - Upload/manage files
+  - Rename/delete/switch sessions
+  - Export chat to PDF
+- 🧩 Modular code structure for extendability
 
-Strategic Improvements
-4. Query Enhancement Pipeline
+---
 
-Query preprocessing - expand abbreviations, fix typos
-Intent detection - factual vs conceptual queries
-Dynamic search strategy - adjust weights based on query type
+## 🏗 Project Layout
 
-5. Response Quality Boosters
+```
+embeddoradoc/
+│── app/main.py               # Streamlit entrypoint
+│── app/components/           # Chat UI, uploader, session UI components
+│── app/utility/              # File helpers, CSS injector, exporters
+│── loader/loader.py          # PDF/JSON/TXT loaders + metadata tagging
+│── vector_store/vector_store.py  # Chunking + FAISS + BM25 indexing
+│── embeddings/embed.py       # Hybrid RAG + rerank + hallucination check
+│── assets/                   # Icons, logos
+│── data/                     # Sample docs for demo
+│── faiss_index/              # Auto-generated FAISS DB
+│── bm25_store.pkl            # BM25 cache file
+│── .env                      # OpenAI key
+```
 
-Source citation system - track which chunk provided each piece of information
-Confidence scoring - rate how well chunks match the query
-Context window optimization - select best chunks, not just most similar
+---
 
-6. Performance & Scalability
+## 🔧 Requirements
 
-Batch processing - handle multiple documents efficiently
-Async operations - don't block UI during processing
-Caching layer - cache frequent queries and results
+- Python **3.10+**
+- Environment variable: `OPENAI_API_KEY`
+- Install dependencies:
 
-Advanced Features (Month 2)
-7. Intelligent Retrieval
+```bash
+pip install streamlit langchain_openai langchain_community langchain-core rank-bm25 sentence-transformers faiss-cpu reportlab pillow python-dotenv
+```
 
-Multi-query generation - create 3 variations of each user query
-Contextual compression - remove irrelevant parts from retrieved chunks
-Reranking - use cross-encoder to reorder results
+---
 
-8. User Experience Enhancements
+## 🚀 Run the App
 
-Conversation memory - remember context across queries
-Personalization - adapt to user preferences and expertise level
-Interactive filtering - let users filter by source, date, topic
+```bash
+streamlit run app/main.py
+```
 
-9. Production Features
+---
 
-Monitoring dashboard - track query performance and user satisfaction
-A/B testing - compare different retrieval strategies
-Analytics - understand usage patterns and optimize accordingly
+## 🧠 How It Works
+
+### 🔹 Upload Document  
+Supported: **PDF / TXT / JSON**
+
+Documents are chunked (500 chars, overlap=50) → embedded → indexed.
+
+### 🔹 Query Flow
+1. Retrieve using **FAISS (top 10)** + **BM25 (top 10)**
+2. Deduplicate & rerank using **cross-encoder**
+3. Send top 3 chunks to **GPT-4o-mini**
+4. Hallucination guard validates answer
+5. Response returned to UI
+
+---
+
+## 🔥 Tips
+
+- Delete `faiss_index/` + `bm25_store.pkl` to rebuild a clean DB
+- Place sample docs inside `/data`
+- Keep `.env` secret (in `.gitignore`)
+- Extend support for more formats via `loader/loader.py`
+
+---
+
+## 📜 License
+MIT — free for personal/commercial use.
+
+---
+
+### ❤️ Contribution Welcome
+
+Suggest features or request enhancements!
