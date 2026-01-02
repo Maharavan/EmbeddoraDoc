@@ -5,8 +5,14 @@ from langchain_openai import ChatOpenAI,OpenAIEmbeddings
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from sentence_transformers import CrossEncoder
+import streamlit as st
 
-model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+@st.cache_resource
+def load_rerank_model():
+    """Load CrossEncoder model for reranking."""
+    return CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2",device='cpu')
+
+model = load_rerank_model()
 
 def rerank_encoder(query, documents, top_k=3):
     """Rerank documents using CrossEncoder model."""
