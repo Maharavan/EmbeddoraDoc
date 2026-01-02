@@ -1,11 +1,18 @@
+"""Module for creating and saving a hybrid vector database using FAISS and BM25."""
 import pickle
 from rank_bm25 import BM25Okapi
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 
 def create_and_save_vector_db(file_content, index_path="faiss_index"):
-
+    """
+    Docstring for create_and_save_vector_db
+    
+    :param file_content: Extracted content from the file
+    :param index_path: FAISS index save path
+    :return: Confirmation message with paths to saved vector store and BM25 store
+    """
     embeddings  = OpenAIEmbeddings()
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     chunks = splitter.split_documents(file_content)
