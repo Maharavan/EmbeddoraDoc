@@ -1,0 +1,24 @@
+name: EmbeddoraDoc
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    Build-Docker-Image-Registry:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+            - name: Login into docker
+              run: |
+                   echo "${{secrets.DOCKER_PASSWORD}}" | docker login -u "${{ secrets.DOCKER_USERNAME}}" --password-stdin
+            - name: Build docker image
+              run: |
+                    docker build -t embeddoradoc:latest .
+            - name: Tag the image
+              run: |
+                    docker tag embeddoradoc:latest ${{secrets.DOCKER_USERNAME}}/embeddoradoc:latest
+            - name: Push the image
+              run: |
+                    docker push ${{secrets.DOCKER_USERNAME}}/embeddoradoc:latest

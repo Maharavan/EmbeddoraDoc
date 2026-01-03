@@ -163,16 +163,14 @@ docker build -t embeddoradoc:latest .
 ```
 
 ```bash
-docker run -p 8501:8501 \
-  -e OPENAI_API_KEY=your_openai_key_here \
-  embeddoradoc:latest
+docker run -p 8501:8501 embeddoradoc:latest
 ```
 
 ---
 
 ## ☁️ Cloud Deployment
 
-#### 🟢 Deployed on Render using Docker
+#### 🟢 Deployed on Railway using Docker
 - Automatic build & deployment from GitHub
 - Secrets managed via environment variables
 - Public HTTPS endpoint for access
