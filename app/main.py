@@ -12,10 +12,8 @@ from vector_store.vector_store import create_and_save_vector_db
 from embeddings.embed import embed_vector
 import streamlit as st
 from PIL import Image
-from dotenv import load_dotenv
 logo = Image.open("assets/logo.png")
 
-load_dotenv()
 st.set_page_config(
     page_icon=logo,
     page_title='EmbeddoraDoc'

@@ -13,6 +13,7 @@ def conversation_history_uploaded_files(docname,filepath):
             f'<img src="data:image/png;base64,{base64_logo}" id="side-logo">',
             unsafe_allow_html=True
         )
+        os.environ["OPENAI_API_KEY"] = st.text_input("OPENAI API Key")
         if st.button('New chat 🤖 🌐'):
             st.session_state.current_session = f"New chat {len(st.session_state.chat_sessions)}"
             st.query_params["session"] = st.session_state.current_session
