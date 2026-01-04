@@ -1,4 +1,6 @@
+import os
 import pickle
+import streamlit as st
 from rank_bm25 import BM25Okapi
 from langchain_community.vectorstores import FAISS
 from langchain_openai import ChatOpenAI,OpenAIEmbeddings
@@ -55,6 +57,10 @@ def check_hallcuinated_content(context, question, answer ,llm):
 
 def embed_vector(query,index_path='faiss_index'):
     """Perform hybrid search using FAISS and BM25, then rerank and generate answer."""
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return
+
     embeddings = OpenAIEmbeddings()
     llm = ChatOpenAI(model="gpt-4o-mini",temperature=0)
 

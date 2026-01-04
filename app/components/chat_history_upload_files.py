@@ -8,7 +8,10 @@ from components.session_exporter import chat_session_exporter
 
 def conversation_history_uploaded_files(docname,filepath):
     with st.sidebar:
-        os.environ["OPENAI_API_KEY"] = st.text_input("OPENAI API KEY")
+        api_key = st.text_input("OPENAI API KEY",type="password",value=st.session_state.OPENAI_API_KEY)
+        if api_key:
+            st.session_state.OPENAI_API_KEY = api_key
+            os.environ["OPENAI_API_KEY"] = api_key
         if st.button('New chat 🤖 🌐'):
             st.session_state.current_session = f"New chat {len(st.session_state.chat_sessions)}"
             st.query_params["session"] = st.session_state.current_session

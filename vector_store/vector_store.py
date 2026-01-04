@@ -1,5 +1,7 @@
 """Module for creating and saving a hybrid vector database using FAISS and BM25."""
+import os
 import pickle
+import streamlit as st
 from rank_bm25 import BM25Okapi
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
@@ -11,8 +13,11 @@ def create_and_save_vector_db(file_content, index_path="faiss_index"):
     
     :param file_content: Extracted content from the file
     :param index_path: FAISS index save path
-    :return: Confirmation message with paths to saved vector store and BM25 store
     """
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        st.error("Please set OPENAI_API_KEY")
+        return
     embeddings  = OpenAIEmbeddings()
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     chunks = splitter.split_documents(file_content)
@@ -25,5 +30,3 @@ def create_and_save_vector_db(file_content, index_path="faiss_index"):
 
     with open("bm25_store.pkl", "wb") as f:
         pickle.dump({"chunks": chunks, "bm25": bm25}, f)
-
-    return f"Hybrid DB saved → Vector:{index_path} + BM25:bm25_store.pkl"

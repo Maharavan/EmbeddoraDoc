@@ -36,8 +36,8 @@ if "current_session" not in st.session_state:
 if "uploaded_file_url" not in st.session_state:
     st.session_state.uploaded_file_url = defaultdict(dict)
 
-
-
+if "OPENAI_API_KEY" not in st.session_state:
+    st.session_state.OPENAI_API_KEY = None
 
 col1,col2 = st.columns([1,4], gap="small")
 with col1:
@@ -79,7 +79,7 @@ if content_file is not None and not st.session_state.chat_sessions[st.session_st
 
 query = st.chat_input('Hello from EmbeddoraDoc!')
 if content_file is not None:
-    if query:
+    if query and st.session_state.OPENAI_API_KEY:
         user_query(query)
         with st.spinner('Loading ..'):
             ai_response = embed_vector(query)
