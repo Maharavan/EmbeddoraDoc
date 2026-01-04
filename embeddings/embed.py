@@ -7,7 +7,7 @@ from langchain_openai import ChatOpenAI,OpenAIEmbeddings
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from sentence_transformers import CrossEncoder
-
+from openai import AuthenticationError,RateLimitError
 RERANKER = None
 
 def load_rerank_model():
@@ -60,61 +60,68 @@ def embed_vector(query,index_path='faiss_index'):
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         return
+    try :
+        embeddings = OpenAIEmbeddings()
+        llm = ChatOpenAI(model="gpt-4o-mini",temperature=0)
 
-    embeddings = OpenAIEmbeddings()
-    llm = ChatOpenAI(model="gpt-4o-mini",temperature=0)
+        vector_store = FAISS.load_local(index_path,embeddings,allow_dangerous_deserialization=True)
+        docs_vector = vector_store.similarity_search(query, k=10)
 
-    vector_store = FAISS.load_local(index_path,embeddings,allow_dangerous_deserialization=True)
-    docs_vector = vector_store.similarity_search(query, k=10)
+        print(f"FAISS hits: {len(docs_vector)}")
 
-    print(f"FAISS hits: {len(docs_vector)}")
+        try:
+            with open("bm25_store.pkl","rb") as f:
+                data = pickle.load(f)
+            chunks = data["chunks"]
+            bm25:BM25Okapi = data["bm25"]
+            docs_bm25_raw = bm25.get_top_n(query.split(), chunks, n=10)
+            print(f"BM25 hits: {len(docs_bm25_raw)}")
+        except FileNotFoundError:
+            print("BM25 store not found — run embedding first.")
+            docs_bm25_raw = []
 
-    try:
-        with open("bm25_store.pkl","rb") as f:
-            data = pickle.load(f)
-        chunks = data["chunks"]
-        bm25:BM25Okapi = data["bm25"]
-        docs_bm25_raw = bm25.get_top_n(query.split(), chunks, n=10)
-        print(f"BM25 hits: {len(docs_bm25_raw)}")
-    except FileNotFoundError:
-        print("BM25 store not found — run embedding first.")
-        docs_bm25_raw = []
+        combined_docs = docs_vector + docs_bm25_raw
 
-    combined_docs = docs_vector + docs_bm25_raw
+        if not combined_docs:
+            return "No results from FAISS or BM25 — reprocess documents."
+        combined_docs = list({doc.page_content: doc for doc in combined_docs}.values())
+        reranked_docs = rerank_encoder(query, combined_docs, top_k=3)
+        context = "\n\n---\n\n".join([doc.page_content for doc in reranked_docs])
 
-    if not combined_docs:
-        return "No results from FAISS or BM25 — reprocess documents."
-    combined_docs = list({doc.page_content: doc for doc in combined_docs}.values())
-    reranked_docs = rerank_encoder(query, combined_docs, top_k=3)
-    context = "\n\n---\n\n".join([doc.page_content for doc in reranked_docs])
+        system_prompt = ("""
+        You are Embeddoradoc, a document-based reasoning assistant.
 
-    system_prompt = ("""
-    You are Embeddoradoc, a document-based reasoning assistant.
+        You must:
+        - Read the context carefully.
+        - Understand the user's question.
+        - Know the content format is text/pdf/json documents.
+        - Extract information relevant to the user's question.
+        - If related information exists, answer using it in your own words.
+        -----------------
+        Context:
+        {context}
+        -----------------
 
-    You must:
-    - Read the context carefully.
-    - Understand the user's question.
-    - Know the content format is text/pdf/json documents.
-    - Extract information relevant to the user's question.
-    - If related information exists, answer using it in your own words.
-    -----------------
-    Context:
-    {context}
-    -----------------
+        Question:
+        {question}
 
-    Question:
-    {question}
-
-    Final Answer:
-    """)
+        Final Answer:
+        """)
 
 
-    prompt = PromptTemplate.from_template(system_prompt)
-    chain = prompt | llm | StrOutputParser()
+        prompt = PromptTemplate.from_template(system_prompt)
+        chain = prompt | llm | StrOutputParser()
 
-    answer = chain.invoke({"context":context,"question":query})
+        answer = chain.invoke({"context":context,"question":query})
 
-    result = check_hallcuinated_content(context, query, answer, llm)
-    if not result:
-        return f"Possible hallucination — answer not fully found in docs.\n\nAnswer: {answer}"
-    return answer
+        result = check_hallcuinated_content(context, query, answer, llm)
+        if not result:
+            return f"Possible hallucination — answer not fully found in docs.\n\nAnswer: {answer}"
+        return answer
+    except AuthenticationError:
+        st.error("❌ Invalid OpenAI API key. Please check and try again.")
+    except RateLimitError:
+        st.error("⚠️ OpenAI rate limit reached. Please try again later.")
+
+    except Exception as e:
+        st.error("❌ Failed to process query")
